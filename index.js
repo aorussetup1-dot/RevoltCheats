@@ -19,9 +19,9 @@ if (!fs.existsSync(DB_FILE)) {
     users: {},
     channels: ["-1003360024342", "-1002219330498"],
     captions: {
-      non_root: "🔥 Non Root Loader",
-      root: "⚡ Root Loader",
-      kernel: "💀 Kernel Loader"
+      non_root: "𝐑𝐞𝐯𝐨𝐥𝐭 𝐂𝐡𝐞𝐚𝐭𝐬 𝐍𝐨𝐧 𝐑𝐨𝐨𝐭 🔥",
+      root: "𝐑𝐞𝐯𝐨𝐥𝐭 𝐂𝐡𝐞𝐚𝐭𝐬 𝐑𝐨𝐨𝐭 ⚡",
+      kernel: "𝐑𝐞𝐯𝐨𝐥𝐭 𝐂𝐡𝐞𝐚𝐭𝐬 𝐊𝐞𝐫𝐧𝐞𝐥 💀"
     }
   }, null, 2));
 }
