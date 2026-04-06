@@ -7,41 +7,61 @@ const app = express();
 app.use(bodyParser.json());
 
 // ===== CONFIG =====
-const TOKEN = "8747945915:AAHFjkl-TypMYhCmokYgVT4XIIDJFyd1eFg";
+const TOKEN = "PUT_YOUR_TOKEN";
 const API = `https://api.telegram.org/bot${TOKEN}`;
-
 const ADMIN_ID = 1953766793;
 
-const CHANNELS = [
-  "-1003360024342",
-  "-1002219330498"
-];
-
-// ===== STORAGE =====
 const DB_FILE = "data.json";
 
+// ===== INIT DB =====
 if (!fs.existsSync(DB_FILE)) {
   fs.writeFileSync(DB_FILE, JSON.stringify({
     users: {},
+    channels: [
+      "-1003360024342",
+      "-1002219330498"
+    ],
     captions: {
-      non_root: "Non Root Loader 🔥",
-      root: "Root Loader ⚡",
-      kernel: "Kernel Loader 💀"
+      non_root: "🔥 Non Root Loader",
+      root: "⚡ Root Loader",
+      kernel: "💀 Kernel Loader"
     }
   }, null, 2));
 }
 
-function loadDB() {
-  return JSON.parse(fs.readFileSync(DB_FILE));
-}
+const loadDB = () => JSON.parse(fs.readFileSync(DB_FILE));
+const saveDB = (d) => fs.writeFileSync(DB_FILE, JSON.stringify(d, null, 2));
 
-function saveDB(data) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-}
-
-// ===== TELEGRAM SEND =====
+// ===== API =====
 async function send(method, data) {
-  return axios.post(`${API}/${method}`, data);
+  try {
+    await axios.post(`${API}/${method}`, data);
+  } catch (e) {
+    console.log("ERR:", e.response?.data || e.message);
+  }
+}
+
+// ===== KEYBOARDS =====
+function mainMenu() {
+  return {
+    keyboard: [
+      ["📱 Non Root", "🔓 Root"],
+      ["⚙️ Kernel"],
+      ["✏️ Edit Caption"]
+    ],
+    resize_keyboard: true
+  };
+}
+
+function adminMenu() {
+  return {
+    keyboard: [
+      ["➕ Add Channel", "➖ Remove Channel"],
+      ["📋 Show Channels"],
+      ["⬅️ Back"]
+    ],
+    resize_keyboard: true
+  };
 }
 
 // ===== WEBHOOK =====
@@ -57,106 +77,149 @@ app.post("/", async (req, res) => {
     const chat = msg.chat.id;
     const text = msg.text;
 
-    // START
+    const state = db.users[chat]?.state;
+
+    // ===== START =====
     if (text === "/start") {
       await send("sendMessage", {
         chat_id: chat,
-        text: "Select Mode 👇",
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: "Non Root", callback_data: "non_root" },
-              { text: "Root", callback_data: "root" }
-            ],
-            [
-              { text: "Kernel", callback_data: "kernel" }
-            ],
-            [
-              { text: "Edit Caption", callback_data: "edit" }
-            ]
-          ]
-        }
+        text: "🔥 Welcome to Revolt Bot\nSelect Mode 👇",
+        reply_markup: mainMenu()
       });
     }
 
-    // PHOTO
+    // ===== ADMIN PANEL =====
+    if (text === "/admin" && msg.from.id === ADMIN_ID) {
+      db.users[chat] = { state: "admin" };
+
+      await send("sendMessage", {
+        chat_id: chat,
+        text: "⚙️ Admin Panel",
+        reply_markup: adminMenu()
+      });
+    }
+
+    // ===== CHANNEL ADD =====
+    if (text === "➕ Add Channel" && msg.from.id === ADMIN_ID) {
+      db.users[chat] = { state: "add_channel" };
+
+      return send("sendMessage", {
+        chat_id: chat,
+        text: "Send Channel ID"
+      });
+    }
+
+    if (state === "add_channel" && msg.from.id === ADMIN_ID) {
+      if (!db.channels.includes(text)) {
+        db.channels.push(text);
+        saveDB(db);
+
+        return send("sendMessage", {
+          chat_id: chat,
+          text: "✅ Channel Added"
+        });
+      }
+    }
+
+    // ===== REMOVE CHANNEL =====
+    if (text === "➖ Remove Channel" && msg.from.id === ADMIN_ID) {
+      db.users[chat] = { state: "remove_channel" };
+
+      return send("sendMessage", {
+        chat_id: chat,
+        text: "Send Channel ID to remove"
+      });
+    }
+
+    if (state === "remove_channel" && msg.from.id === ADMIN_ID) {
+      db.channels = db.channels.filter(c => c !== text);
+      saveDB(db);
+
+      return send("sendMessage", {
+        chat_id: chat,
+        text: "❌ Channel Removed"
+      });
+    }
+
+    // ===== SHOW CHANNELS =====
+    if (text === "📋 Show Channels" && msg.from.id === ADMIN_ID) {
+      return send("sendMessage", {
+        chat_id: chat,
+        text: "Channels:\n" + db.channels.join("\n")
+      });
+    }
+
+    // ===== MODE SELECT =====
+    if (text === "📱 Non Root" || text === "🔓 Root" || text === "⚙️ Kernel") {
+      let type = text.includes("Non") ? "non_root" :
+                 text.includes("Root") ? "root" : "kernel";
+
+      db.users[chat] = { state: type };
+
+      saveDB(db);
+
+      return send("sendMessage", {
+        chat_id: chat,
+        text: "📸 Send Photo"
+      });
+    }
+
+    // ===== EDIT CAPTION =====
+    if (text === "✏️ Edit Caption" && msg.from.id === ADMIN_ID) {
+      db.users[chat] = { state: "edit_caption" };
+
+      return send("sendMessage", {
+        chat_id: chat,
+        text: "Send:\nnon_root: caption"
+      });
+    }
+
+    if (state === "edit_caption" && msg.from.id === ADMIN_ID) {
+      if (text.includes(":")) {
+        let [k, v] = text.split(":", 2);
+        k = k.trim(); v = v.trim();
+
+        if (db.captions[k]) {
+          db.captions[k] = v;
+          saveDB(db);
+
+          return send("sendMessage", {
+            chat_id: chat,
+            text: "✅ Updated"
+          });
+        }
+      }
+    }
+
+    // ===== PHOTO =====
     if (msg.photo) {
-      const state = db.users[chat]?.state;
-      if (!state) return;
+      const st = db.users[chat]?.state;
+      if (!st) return;
 
       const photo = msg.photo[msg.photo.length - 1].file_id;
-      const caption = db.captions[state] || "Uploaded";
+      const caption = db.captions[st];
 
-      for (let ch of CHANNELS) {
+      for (let ch of db.channels) {
         await send("sendPhoto", {
           chat_id: ch,
-          photo: photo,
-          caption: caption
+          photo,
+          caption
         });
       }
 
       delete db.users[chat];
-
-      await send("sendMessage", {
-        chat_id: chat,
-        text: "✅ Posted to channels"
-      });
-
       saveDB(db);
-    }
 
-    // EDIT CAPTION
-    if (text && msg.from.id === ADMIN_ID) {
-      const state = db.users[chat]?.state;
-
-      if (state === "edit" && text.includes(":")) {
-        let [k, v] = text.split(":", 2);
-        k = k.trim();
-        v = v.trim();
-
-        if (db.captions[k]) {
-          db.captions[k] = v;
-          await send("sendMessage", {
-            chat_id: chat,
-            text: `✅ Updated ${k}`
-          });
-        }
-
-        saveDB(db);
-      }
-    }
-  }
-
-  // ===== CALLBACK =====
-  if (update.callback_query) {
-    const cb = update.callback_query;
-    const chat = cb.message.chat.id;
-    const user = cb.from.id;
-    const data = cb.data;
-
-    if (data === "edit") {
-      if (user !== ADMIN_ID) return;
-
-      db.users[chat] = { state: "edit" };
-
-      await send("sendMessage", {
+      return send("sendMessage", {
         chat_id: chat,
-        text: "Send like:\nnon_root: caption"
-      });
-
-    } else {
-      db.users[chat] = { state: data };
-
-      await send("sendMessage", {
-        chat_id: chat,
-        text: "📸 Send photo"
+        text: "✅ Posted Successfully"
       });
     }
-
-    saveDB(db);
   }
 });
 
-// ===== START SERVER =====
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Bot running..."));
+// ===== HEALTH =====
+app.get("/", (req, res) => res.send("🔥 Revolt Bot Running"));
+
+// ===== START =====
+app.listen(process.env.PORT || 3000);
