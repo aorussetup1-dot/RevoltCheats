@@ -25,7 +25,7 @@ body {
   color: white;
 }
 
-/* 🔥 SMOOTH ANIMATED BACKGROUND */
+/* 🔥 Background */
 .bg {
   position: fixed;
   width: 200%;
@@ -33,7 +33,6 @@ body {
   background: radial-gradient(circle at 30% 30%, rgba(255,0,0,0.15), transparent 40%),
               radial-gradient(circle at 70% 70%, rgba(255,0,0,0.12), transparent 40%);
   animation: moveBg 12s linear infinite;
-  z-index: 0;
 }
 
 @keyframes moveBg {
@@ -42,7 +41,7 @@ body {
   100% { transform: translate(0%, 0%); }
 }
 
-/* 🔥 PARTICLES */
+/* ✨ Particles */
 .particles span {
   position: absolute;
   width: 2px;
@@ -56,7 +55,7 @@ body {
   to { transform: translateY(-10vh); opacity: 0; }
 }
 
-/* CARD */
+/* 🧊 Card */
 .card {
   position: relative;
   z-index: 2;
@@ -75,7 +74,7 @@ body {
   to { opacity: 1; transform: scale(1); }
 }
 
-/* LOGO */
+/* 🐺 Logo */
 .logo {
   width: 120px;
   margin-bottom: 20px;
@@ -87,14 +86,14 @@ body {
   50% { transform: translateY(-10px); }
 }
 
-/* TITLE */
+/* 🔥 Title */
 h1 {
   color: #ff2e2e;
   text-shadow: 0 0 20px red;
   margin-bottom: 10px;
 }
 
-/* BUTTONS */
+/* 🎯 Buttons */
 .btn {
   display: block;
   margin: 10px auto;
@@ -107,45 +106,39 @@ h1 {
   font-size: 14px;
 }
 
-/* DOWNLOAD */
+/* ⬇️ Download */
 .download {
   background: linear-gradient(45deg, #ff0000, #990000);
   box-shadow: 0 0 20px red;
   animation: pulse 2s infinite;
 }
 
-/* TELEGRAM */
-.telegram {
-  background: linear-gradient(45deg, #0088cc, #005f99);
-  box-shadow: 0 0 15px #0088cc;
-}
-
-/* CHANNEL */
+/* 📢 Channel */
 .channel {
   background: linear-gradient(45deg, #6a00ff, #3b0099);
   box-shadow: 0 0 15px #6a00ff;
 }
 
-/* BUY */
+/* 💰 Buy */
 .buy {
   background: linear-gradient(45deg, #ffcc00, #cc9900);
   color: black;
   box-shadow: 0 0 15px #ffcc00;
 }
 
-/* HOVER */
+/* Hover */
 .btn:hover {
   transform: scale(1.05);
 }
 
-/* PULSE */
+/* Pulse */
 @keyframes pulse {
   0% { box-shadow: 0 0 10px red; }
   50% { box-shadow: 0 0 25px red; }
   100% { box-shadow: 0 0 10px red; }
 }
 
-/* LOADER */
+/* ⏳ Loader */
 .loader {
   position: fixed;
   width: 100%;
@@ -171,7 +164,7 @@ h1 {
   display: none;
 }
 
-/* FLOATING TG */
+/* 📲 Floating TG */
 .floating {
   position: fixed;
   bottom: 20px;
@@ -199,39 +192,36 @@ h1 {
   <span style="left:90%;animation-delay:8s"></span>
 </div>
 
-<!-- LOADER -->
+<!-- ⏳ Loader -->
 <div class="loader" id="loader">
-  <h2>REVOLT LOADING...</h2>
+  <h2>⚡ REVOLT LOADING...</h2>
 </div>
 
-<!-- MAIN -->
+<!-- 🧊 Main Card -->
 <div class="card">
 
   <img src="logo.jpg" class="logo">
 
-  <h1>REVOLT LOADER</h1>
-  <p style="color:#aaa;">Dominate the Game</p>
+  <h1>🔥 REVOLT LOADER</h1>
+  <p style="color:#aaa;">🎮 Dominate the Game</p>
 
-  <a class="btn download" onclick="downloadAPK()">DOWNLOAD APK</a>
-
-  <a class="btn telegram" href="https://t.me/ARxSHUBH" target="_blank">
-    JOIN TELEGRAM
-  </a>
+  <a class="btn download" onclick="downloadAPK()">⬇️ DOWNLOAD APK</a>
 
   <a class="btn channel" href="https://t.me/RevoltCheats" target="_blank">
-    JOIN CHANNEL
+    📢 JOIN CHANNEL
   </a>
 
   <a class="btn buy" href="https://t.me/ARxSHUBH" target="_blank">
-    BUY KEY
+    💰 BUY KEY
   </a>
 
 </div>
 
-<a class="floating" href="https://t.me/ARxSHUBH" target="_blank">TG</a>
+<!-- 📲 Floating Telegram -->
+<a class="floating" href="https://t.me/ARxSHUBH" target="_blank">💬</a>
 
 <script>
-// Loader hide
+// Loader
 setTimeout(() => {
   document.getElementById("loader").classList.add("hide");
 }, 2000);
