@@ -8,7 +8,7 @@ app.use(bodyParser.json());
 
 // ===== CONFIG =====
 const MAIN_TOKEN = "8747945915:AAHFjkl-TypMYhCmokYgVT4XIIDJFyd1eFg";
-const BASE_URL = "https://revoltcheats.onrender.com"; // CHANGE THIS
+const BASE_URL = "https://revoltcheats.onrender.com"; // CHANGE
 const DB_FILE = "data.json";
 
 // ===== INIT DB =====
@@ -27,7 +27,7 @@ const saveDB = (d) => fs.writeFileSync(DB_FILE, JSON.stringify(d, null, 2));
 const send = (token, method, data) =>
   axios.post(`https://api.telegram.org/bot${token}/${method}`, data);
 
-// ===== MAIN MENU =====
+// ===== MENU =====
 const mainMenu = () => ({
   keyboard: [["🤖 Create Bot"], ["📊 My Bot"]],
   resize_keyboard: true
@@ -62,7 +62,7 @@ app.post("/", async (req, res) => {
 
     await send(MAIN_TOKEN, "sendMessage", {
       chat_id: chat,
-      text: "🔑 Send your bot token"
+      text: "🔑 Send Bot Token"
     });
     return;
   }
@@ -72,7 +72,7 @@ app.post("/", async (req, res) => {
     if (!text || !text.includes(":") || text.length < 30) {
       await send(MAIN_TOKEN, "sendMessage", {
         chat_id: chat,
-        text: "❌ Invalid token"
+        text: "❌ Invalid Token"
       });
       return;
     }
@@ -87,24 +87,24 @@ app.post("/", async (req, res) => {
 
       await send(MAIN_TOKEN, "sendMessage", {
         chat_id: chat,
-        text: "👤 Send admin chat ID"
+        text: "👤 Send Admin Chat ID"
       });
 
     } catch {
       await send(MAIN_TOKEN, "sendMessage", {
         chat_id: chat,
-        text: "❌ Invalid token"
+        text: "❌ Invalid Token"
       });
     }
     return;
   }
 
-  // ADMIN INPUT
+  // ADMIN ID
   if (db.users[chat].state === "admin") {
     if (!text || isNaN(text)) {
       await send(MAIN_TOKEN, "sendMessage", {
         chat_id: chat,
-        text: "❌ Invalid ID"
+        text: "❌ Invalid Chat ID"
       });
       return;
     }
@@ -131,9 +131,43 @@ app.post("/", async (req, res) => {
 
     await send(MAIN_TOKEN, "sendMessage", {
       chat_id: chat,
-      text: "✅ Bot created successfully"
+      text: "✅ Bot Created Successfully 🚀"
     });
     return;
+  }
+
+  // ===== MY BOT =====
+  if (text === "📊 My Bot") {
+    const token = db.bots[chat];
+
+    if (!token) {
+      await send(MAIN_TOKEN, "sendMessage", {
+        chat_id: chat,
+        text: "❌ No bot created yet"
+      });
+      return;
+    }
+
+    try {
+      const info = await axios.get(`https://api.telegram.org/bot${token}/getMe`);
+
+      await send(MAIN_TOKEN, "sendMessage", {
+        chat_id: chat,
+        text:
+`🤖 Your Bot
+
+👤 ${info.data.result.first_name}
+🔗 @${info.data.result.username}
+🆔 ${info.data.result.id}
+
+✅ Active`
+      });
+    } catch {
+      await send(MAIN_TOKEN, "sendMessage", {
+        chat_id: chat,
+        text: "⚠️ Bot not responding"
+      });
+    }
   }
 });
 
@@ -195,7 +229,7 @@ app.post("/:token", async (req, res) => {
 
     await sendBot("sendMessage", {
       chat_id: chat,
-      text: "Send: alias - caption"
+      text: "alias - caption"
     });
     return;
   }
@@ -210,10 +244,8 @@ app.post("/:token", async (req, res) => {
     }
 
     let [a, ...b] = text.split("-");
-    let alias = a.trim().toLowerCase();
-    let caption = b.join("-").trim();
+    config.modes[a.trim().toLowerCase()] = b.join("-").trim();
 
-    config.modes[alias] = caption;
     delete config.state[user].mode;
     saveDB(db);
 
@@ -284,7 +316,7 @@ app.post("/:token", async (req, res) => {
     return;
   }
 
-  // PHOTO
+  // COLLECT PHOTOS
   if (msg.photo && config.state[user].media) {
     config.state[user].media.push(
       msg.photo[msg.photo.length - 1].file_id
@@ -297,30 +329,45 @@ app.post("/:token", async (req, res) => {
     return;
   }
 
-  // DONE
+  // POST
   if (text === "DONE" && config.state[user].media) {
+    if (config.channels.length === 0) {
+      await sendBot("sendMessage", {
+        chat_id: chat,
+        text: "⚠️ No channels added"
+      });
+      return;
+    }
+
     const data = config.state[user];
 
     for (let ch of config.channels) {
-      await sendBot("sendMediaGroup", {
-        chat_id: ch,
-        media: data.media.map((m, i) => ({
-          type: "photo",
-          media: m,
-          caption: i === 0 ? config.modes[data.post] : ""
-        }))
-      });
+      try {
+        await sendBot("sendMediaGroup", {
+          chat_id: ch,
+          media: data.media.map((m, i) => ({
+            type: "photo",
+            media: m,
+            caption: i === 0 ? config.modes[data.post] : ""
+          }))
+        });
+      } catch {
+        await sendBot("sendMessage", {
+          chat_id: chat,
+          text: "❌ Failed to post (check bot admin rights)"
+        });
+      }
     }
 
     config.stats.posts++;
-    config.logs.push(`Posted ${data.media.length}`);
+    config.logs.push(`Posted ${data.media.length} photos`);
 
     delete config.state[user];
     saveDB(db);
 
     await sendBot("sendMessage", {
       chat_id: chat,
-      text: "✅ Posted",
+      text: "✅ Posted Successfully 🚀",
       reply_markup: menu()
     });
   }
@@ -347,4 +394,4 @@ app.get("/", (req, res) => {
   res.send("🚀 Bot Running");
 });
 
-app.listen(3000, () => console.log("🚀 Server Started"));
+app.listen(3000, () => console.log("🚀 Server Running"));
