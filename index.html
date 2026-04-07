@@ -17,42 +17,57 @@
 
 body {
   height: 100vh;
-  background: radial-gradient(circle at top, #1a0000, #000000);
+  overflow: hidden;
+  background: black;
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
   color: white;
 }
 
-/* 🔥 Animated background glow */
-body::before {
-  content: "";
-  position: absolute;
+/* 🔥 SMOOTH ANIMATED BACKGROUND */
+.bg {
+  position: fixed;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255,0,0,0.15), transparent 60%);
-  animation: moveBg 8s linear infinite;
+  background: radial-gradient(circle at 30% 30%, rgba(255,0,0,0.15), transparent 40%),
+              radial-gradient(circle at 70% 70%, rgba(255,0,0,0.12), transparent 40%);
+  animation: moveBg 12s linear infinite;
+  z-index: 0;
 }
 
 @keyframes moveBg {
-  0% { transform: translate(-20%, -20%); }
-  50% { transform: translate(20%, 20%); }
-  100% { transform: translate(-20%, -20%); }
+  0% { transform: translate(0%, 0%); }
+  50% { transform: translate(-20%, -20%); }
+  100% { transform: translate(0%, 0%); }
 }
 
-/* Card */
+/* 🔥 PARTICLES */
+.particles span {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: red;
+  animation: float 10s linear infinite;
+}
+
+@keyframes float {
+  from { transform: translateY(100vh); opacity: 1; }
+  to { transform: translateY(-10vh); opacity: 0; }
+}
+
+/* CARD */
 .card {
   position: relative;
+  z-index: 2;
   text-align: center;
   padding: 40px;
   border-radius: 20px;
   background: rgba(255,255,255,0.05);
   backdrop-filter: blur(15px);
-  box-shadow: 0 0 40px rgba(255,0,0,0.5);
+  box-shadow: 0 0 40px rgba(255,0,0,0.6);
   width: 340px;
-  z-index: 1;
-  animation: fadeIn 1.5s ease;
+  animation: fadeIn 1.2s ease;
 }
 
 @keyframes fadeIn {
@@ -60,63 +75,77 @@ body::before {
   to { opacity: 1; transform: scale(1); }
 }
 
-/* Logo */
+/* LOGO */
 .logo {
   width: 120px;
   margin-bottom: 20px;
-  animation: float 3s ease-in-out infinite;
+  animation: floatLogo 3s ease-in-out infinite;
 }
 
-@keyframes float {
+@keyframes floatLogo {
   0%,100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
 
-/* Heading */
+/* TITLE */
 h1 {
   color: #ff2e2e;
-  text-shadow: 0 0 15px red;
+  text-shadow: 0 0 20px red;
   margin-bottom: 10px;
 }
 
-/* Buttons */
+/* BUTTONS */
 .btn {
   display: block;
-  margin: 12px auto;
+  margin: 10px auto;
   padding: 14px;
   width: 100%;
   border-radius: 10px;
   text-decoration: none;
   color: white;
-  font-size: 14px;
   transition: 0.3s;
+  font-size: 14px;
 }
 
-/* Download */
+/* DOWNLOAD */
 .download {
   background: linear-gradient(45deg, #ff0000, #990000);
-  box-shadow: 0 0 20px rgba(255,0,0,0.7);
-  animation: pulseRed 2s infinite;
+  box-shadow: 0 0 20px red;
+  animation: pulse 2s infinite;
 }
 
-@keyframes pulseRed {
+/* TELEGRAM */
+.telegram {
+  background: linear-gradient(45deg, #0088cc, #005f99);
+  box-shadow: 0 0 15px #0088cc;
+}
+
+/* CHANNEL */
+.channel {
+  background: linear-gradient(45deg, #6a00ff, #3b0099);
+  box-shadow: 0 0 15px #6a00ff;
+}
+
+/* BUY */
+.buy {
+  background: linear-gradient(45deg, #ffcc00, #cc9900);
+  color: black;
+  box-shadow: 0 0 15px #ffcc00;
+}
+
+/* HOVER */
+.btn:hover {
+  transform: scale(1.05);
+}
+
+/* PULSE */
+@keyframes pulse {
   0% { box-shadow: 0 0 10px red; }
   50% { box-shadow: 0 0 25px red; }
   100% { box-shadow: 0 0 10px red; }
 }
 
-/* Telegram */
-.telegram {
-  background: linear-gradient(45deg, #0088cc, #005f99);
-  box-shadow: 0 0 15px rgba(0,136,204,0.7);
-}
-
-/* Hover */
-.btn:hover {
-  transform: scale(1.05);
-}
-
-/* Loader screen */
+/* LOADER */
 .loader {
   position: fixed;
   width: 100%;
@@ -131,7 +160,6 @@ h1 {
 
 .loader h2 {
   color: red;
-  margin-top: 20px;
   animation: blink 1s infinite;
 }
 
@@ -139,65 +167,76 @@ h1 {
   50% { opacity: 0.3; }
 }
 
-/* Hide after load */
 .hide {
   display: none;
 }
 
-/* Floating Telegram */
-.floating-tg {
+/* FLOATING TG */
+.floating {
   position: fixed;
   bottom: 20px;
   right: 20px;
   background: #0088cc;
-  padding: 12px 16px;
+  padding: 12px 15px;
   border-radius: 50px;
-  color: white;
   text-decoration: none;
+  color: white;
   box-shadow: 0 0 15px #0088cc;
-  font-size: 14px;
+  z-index: 5;
 }
 </style>
 </head>
 
 <body>
 
-<!-- 🔥 LOADER -->
+<div class="bg"></div>
+
+<div class="particles">
+  <span style="left:10%;animation-delay:0s"></span>
+  <span style="left:30%;animation-delay:2s"></span>
+  <span style="left:50%;animation-delay:4s"></span>
+  <span style="left:70%;animation-delay:6s"></span>
+  <span style="left:90%;animation-delay:8s"></span>
+</div>
+
+<!-- LOADER -->
 <div class="loader" id="loader">
   <h2>REVOLT LOADING...</h2>
 </div>
 
-<!-- MAIN UI -->
+<!-- MAIN -->
 <div class="card">
 
-  <!-- Replace logo -->
   <img src="logo.jpg" class="logo">
 
   <h1>REVOLT LOADER</h1>
   <p style="color:#aaa;">Dominate the Game</p>
 
-  <!-- Download -->
   <a class="btn download" onclick="downloadAPK()">DOWNLOAD APK</a>
 
-  <!-- Telegram -->
   <a class="btn telegram" href="https://t.me/ARxSHUBH" target="_blank">
     JOIN TELEGRAM
   </a>
 
+  <a class="btn channel" href="https://t.me/RevoltCheats" target="_blank">
+    JOIN CHANNEL
+  </a>
+
+  <a class="btn buy" href="https://t.me/ARxSHUBH" target="_blank">
+    BUY KEY
+  </a>
+
 </div>
 
-<!-- Floating Telegram -->
-<a class="floating-tg" href="https://t.me/ARxSHUBH" target="_blank">
-  TELEGRAM
-</a>
+<a class="floating" href="https://t.me/ARxSHUBH" target="_blank">TG</a>
 
 <script>
-// Hide loader
+// Loader hide
 setTimeout(() => {
   document.getElementById("loader").classList.add("hide");
 }, 2000);
 
-// Download function + auto redirect
+// Download + redirect
 function downloadAPK() {
   window.location.href = "https://raw.githubusercontent.com/aorussetup1-dot/RevoltCheats/main/app.apk";
 
