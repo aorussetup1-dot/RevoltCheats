@@ -7,7 +7,7 @@ const app = express();
 app.use(bodyParser.json());
 
 // ===== CONFIG =====
-const MAIN_TOKEN = "8747945915:AAHFjkl-TypMYhCmokYgVT4XIIDJFyd1eFg";
+const MAIN_TOKEN = "8747945915:AAHLdExgedeAdwWK1c6LZ8Rh6hcj3VJgAHI";
 const BASE_URL = "https://revoltcheats.onrender.com"; // CHANGE
 const DB_FILE = "data.json";
 
