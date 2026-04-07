@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Revolt Loader</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -20,22 +20,19 @@ body {
   background: #0a0a0a;
   overflow: hidden;
   color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-/* 🌈 Gradient Mesh Background */
+/* 🌈 Animated Gradient Mesh */
 .mesh {
   position: absolute;
   width: 200%;
   height: 200%;
   background:
-    radial-gradient(circle at 20% 30%, rgba(255,0,80,0.2), transparent),
-    radial-gradient(circle at 80% 70%, rgba(255,0,0,0.15), transparent),
-    radial-gradient(circle at 50% 50%, rgba(150,0,255,0.1), transparent);
-  filter: blur(80px);
-  animation: move 20s infinite alternate ease-in-out;
+    radial-gradient(circle at 20% 30%, rgba(255,0,80,0.25), transparent),
+    radial-gradient(circle at 80% 70%, rgba(255,0,0,0.2), transparent),
+    radial-gradient(circle at 50% 50%, rgba(150,0,255,0.15), transparent);
+  filter: blur(100px);
+  animation: move 20s ease-in-out infinite alternate;
 }
 
 @keyframes move {
@@ -43,88 +40,82 @@ body {
   100% { transform: translate(-10%, -10%); }
 }
 
-/* 🧊 Glass Card */
-.card {
+/* 🧠 Main Layout */
+.container {
   position: relative;
-  width: 360px;
-  padding: 30px;
-  border-radius: 24px;
-  backdrop-filter: blur(25px);
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
   z-index: 2;
-  animation: fadeUp 1s ease;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(30px);}
-  to { opacity: 1; transform: translateY(0);}
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 /* 🐺 Logo */
 .logo {
   width: 90px;
-  margin: auto;
-  display: block;
-  margin-bottom: 15px;
-  transition: 0.4s;
+  margin-bottom: 20px;
+  transition: 0.3s;
 }
 
 .logo:hover {
-  transform: scale(1.08) rotate(2deg);
+  transform: scale(1.05);
 }
 
 /* 🔥 Title */
 h1 {
-  text-align: center;
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 600;
 }
 
 .subtitle {
-  text-align: center;
-  font-size: 13px;
+  font-size: 14px;
   color: #aaa;
-  margin-bottom: 25px;
+  margin-bottom: 30px;
 }
 
-/* ⚡ Buttons (Modern liquid style) */
+/* ⚡ Buttons */
+.buttons {
+  width: 85%;
+  max-width: 320px;
+}
+
 .btn {
   position: relative;
-  overflow: hidden;
   display: block;
-  padding: 14px;
+  padding: 15px;
   margin: 10px 0;
   border-radius: 14px;
   text-align: center;
   text-decoration: none;
   color: white;
-  font-size: 14px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  font-size: 15px;
+  overflow: hidden;
   transition: 0.3s;
+  backdrop-filter: blur(10px);
 }
 
-/* Hover magnetic feel */
-.btn:hover {
-  transform: translateY(-3px);
-  background: rgba(255,255,255,0.08);
-}
-
-/* Gradient overlay animation */
+/* Shine effect */
 .btn::before {
   content: "";
   position: absolute;
   width: 120%;
   height: 100%;
-  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.4), transparent);
   transform: translateX(-100%);
-  transition: 0.5s;
 }
 
 .btn:hover::before {
-  transform: translateX(100%);
+  animation: shine 0.8s;
+}
+
+@keyframes shine {
+  to { transform: translateX(100%); }
+}
+
+.btn:hover {
+  transform: translateY(-2px);
 }
 
 /* Variants */
@@ -141,27 +132,21 @@ h1 {
   color: black;
 }
 
-/* Floating button */
+/* Floating TG */
 .floating {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(10px);
   padding: 12px 16px;
   border-radius: 50px;
-  font-size: 14px;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
   text-decoration: none;
   color: white;
   border: 1px solid rgba(255,255,255,0.1);
-  transition: 0.3s;
 }
 
-.floating:hover {
-  transform: scale(1.1);
-}
-
-/* Loader (clean minimal) */
+/* Loader */
 .loader {
   position: fixed;
   width: 100%;
@@ -201,33 +186,39 @@ h1 {
   <div class="spinner"></div>
 </div>
 
-<!-- Main UI -->
-<div class="card">
+<!-- Main -->
+<div class="container">
 
   <img src="logo.jpg" class="logo">
 
-  <h1>Revolt Loader</h1>
-  <p class="subtitle">Next-gen experience ⚡</p>
+  <h1>🔥 Revolt Loader</h1>
+  <p class="subtitle">⚡ Next-gen experience</p>
 
-  <a class="btn download" onclick="downloadAPK()">⬇ Download APK</a>
+  <div class="buttons">
 
-  <a class="btn channel" href="https://t.me/RevoltCheats" target="_blank">
-    📢 Join Channel
-  </a>
+    <a class="btn download" onclick="downloadAPK()">⬇ Download APK</a>
 
-  <a class="btn buy" href="https://t.me/ARxSHUBH" target="_blank">
-    💰 Buy Key
-  </a>
+    <a class="btn channel" href="https://t.me/RevoltCheats" target="_blank">
+      📢 Join Channel
+    </a>
+
+    <a class="btn buy" href="https://t.me/ARxSHUBH" target="_blank">
+      💰 Buy Key
+    </a>
+
+  </div>
 
 </div>
 
 <a class="floating" href="https://t.me/ARxSHUBH" target="_blank">💬</a>
 
 <script>
+// Loader
 setTimeout(() => {
   document.getElementById("loader").classList.add("hide");
-}, 1200);
+}, 1000);
 
+// Download
 function downloadAPK() {
   window.location.href = "https://raw.githubusercontent.com/aorussetup1-dot/RevoltCheats/main/app.apk";
 
