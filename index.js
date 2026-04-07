@@ -1,3 +1,4 @@
+// ===== index.js =====
 const express = require("express");
 const bodyParser = require("body-parser");
 const axios = require("axios");
@@ -6,11 +7,16 @@ const fs = require("fs");
 const app = express();
 app.use(bodyParser.json());
 
-// ===== CONFIG =====
-const MAIN_TOKEN = process.env.MAIN_TOKEN || "8747945915:AAF3RG9ANd-PzA1TqvIp9KCv3ZNNUnFMCOc";
-const BASE_URL = process.env.BASE_URL || "https://revoltcheats.onrender.com";
-const PORT = process.env.PORT || 3000;
-const DB_FILE = "data.json";
+// ===== CONFIG (ENV ONLY) =====
+const MAIN_TOKEN = process.env.MAIN_TOKEN;          // REQUIRED
+const BASE_URL  = process.env.BASE_URL;             // REQUIRED (https)
+const PORT      = process.env.PORT || 3000;
+const DB_FILE   = "data.json";
+
+if (!MAIN_TOKEN || !BASE_URL) {
+  console.error("❌ Missing MAIN_TOKEN or BASE_URL env vars");
+  process.exit(1);
+}
 
 // ===== INIT DB =====
 if (!fs.existsSync(DB_FILE)) {
@@ -25,29 +31,29 @@ if (!fs.existsSync(DB_FILE)) {
 const loadDB = () => JSON.parse(fs.readFileSync(DB_FILE));
 const saveDB = (d) => fs.writeFileSync(DB_FILE, JSON.stringify(d, null, 2));
 
-// ===== SAFE SEND =====
-async function send(token, method, data) {
+// ===== SAFE TELEGRAM CALL =====
+async function tg(token, method, data) {
   try {
     return await axios.post(`https://api.telegram.org/bot${token}/${method}`, data);
   } catch (err) {
-    console.log("❌ Telegram Error:", err.response?.data || err.message);
+    console.log("❌ TG Error:", err.response?.data || err.message);
   }
 }
 
 // ===== AUTO WEBHOOK =====
 async function setWebhook(token, path = "") {
+  const url = `${BASE_URL}${path}`;
   try {
-    const url = `${BASE_URL}${path}`;
     const res = await axios.get(
-      `https://api.telegram.org/bot${token}/setWebhook?url=${url}`
+      `https://api.telegram.org/bot${token}/setWebhook?url=${encodeURIComponent(url)}`
     );
-    console.log("✅ Webhook set:", url);
+    console.log("✅ Webhook set:", url, res.data);
   } catch (err) {
-    console.log("❌ Webhook error:", err.message);
+    console.log("❌ Webhook error:", err.response?.data || err.message);
   }
 }
 
-// ===== MENU =====
+// ===== MAIN MENU =====
 const mainMenu = () => ({
   keyboard: [["🤖 Create Bot"], ["📊 My Bot"]],
   resize_keyboard: true
@@ -56,8 +62,7 @@ const mainMenu = () => ({
 // ===== MAIN BOT =====
 app.post("/", async (req, res) => {
   res.sendStatus(200);
-
-  console.log("📩 MAIN UPDATE:", JSON.stringify(req.body));
+  console.log("📩 MAIN:", JSON.stringify(req.body));
 
   const db = loadDB();
   const msg = req.body.message;
@@ -69,7 +74,7 @@ app.post("/", async (req, res) => {
 
   // START
   if (text === "/start") {
-    await send(MAIN_TOKEN, "sendMessage", {
+    await tg(MAIN_TOKEN, "sendMessage", {
       chat_id: chat,
       text: "🚀 Revolt Bot Maker",
       reply_markup: mainMenu()
@@ -81,10 +86,9 @@ app.post("/", async (req, res) => {
   if (text === "🤖 Create Bot") {
     db.users[chat].state = "token";
     saveDB(db);
-
-    await send(MAIN_TOKEN, "sendMessage", {
+    await tg(MAIN_TOKEN, "sendMessage", {
       chat_id: chat,
-      text: "🔑 Send Bot Token"
+      text: "🔑 Send Bot Token from @BotFather"
     });
     return;
   }
@@ -92,9 +96,9 @@ app.post("/", async (req, res) => {
   // TOKEN INPUT
   if (db.users[chat].state === "token") {
     if (!text || !text.includes(":") || text.length < 30) {
-      await send(MAIN_TOKEN, "sendMessage", {
+      await tg(MAIN_TOKEN, "sendMessage", {
         chat_id: chat,
-        text: "❌ Invalid Token"
+        text: "❌ Invalid token format"
       });
       return;
     }
@@ -107,15 +111,14 @@ app.post("/", async (req, res) => {
       db.users[chat].state = "admin";
       saveDB(db);
 
-      await send(MAIN_TOKEN, "sendMessage", {
+      await tg(MAIN_TOKEN, "sendMessage", {
         chat_id: chat,
-        text: "👤 Send Admin Chat ID"
+        text: "👤 Send Admin Chat ID (your user id or group id)"
       });
-
     } catch {
-      await send(MAIN_TOKEN, "sendMessage", {
+      await tg(MAIN_TOKEN, "sendMessage", {
         chat_id: chat,
-        text: "❌ Invalid Token"
+        text: "❌ Invalid token"
       });
     }
     return;
@@ -124,7 +127,7 @@ app.post("/", async (req, res) => {
   // ADMIN ID
   if (db.users[chat].state === "admin") {
     if (!text || isNaN(text)) {
-      await send(MAIN_TOKEN, "sendMessage", {
+      await tg(MAIN_TOKEN, "sendMessage", {
         chat_id: chat,
         text: "❌ Invalid Chat ID"
       });
@@ -137,8 +140,8 @@ app.post("/", async (req, res) => {
     db.configs[token] = {
       admin: Number(text),
       channels: [],
-      modes: {},
-      state: {},
+      modes: {},          // alias -> caption
+      state: {},          // per-user temp state
       stats: { posts: 0 },
       logs: []
     };
@@ -149,9 +152,9 @@ app.post("/", async (req, res) => {
     delete db.users[chat].state;
     saveDB(db);
 
-    await send(MAIN_TOKEN, "sendMessage", {
+    await tg(MAIN_TOKEN, "sendMessage", {
       chat_id: chat,
-      text: "✅ Bot Created Successfully 🚀"
+      text: "✅ Bot created & webhook set 🚀"
     });
     return;
   }
@@ -161,17 +164,16 @@ app.post("/", async (req, res) => {
     const token = db.bots[chat];
 
     if (!token) {
-      await send(MAIN_TOKEN, "sendMessage", {
+      await tg(MAIN_TOKEN, "sendMessage", {
         chat_id: chat,
-        text: "❌ No bot created yet"
+        text: "❌ You haven't created any bot yet"
       });
       return;
     }
 
     try {
       const info = await axios.get(`https://api.telegram.org/bot${token}/getMe`);
-
-      await send(MAIN_TOKEN, "sendMessage", {
+      await tg(MAIN_TOKEN, "sendMessage", {
         chat_id: chat,
         text:
 `🤖 Your Bot
@@ -183,7 +185,7 @@ app.post("/", async (req, res) => {
 ✅ Active`
       });
     } catch {
-      await send(MAIN_TOKEN, "sendMessage", {
+      await tg(MAIN_TOKEN, "sendMessage", {
         chat_id: chat,
         text: "⚠️ Bot not responding"
       });
@@ -191,11 +193,10 @@ app.post("/", async (req, res) => {
   }
 });
 
-// ===== CLONE BOT =====
+// ===== CLONED BOT HANDLER =====
 app.post("/:token", async (req, res) => {
   res.sendStatus(200);
-
-  console.log("📩 CLONE UPDATE:", JSON.stringify(req.body));
+  console.log("📩 CLONE:", JSON.stringify(req.body));
 
   const token = req.params.token;
   const db = loadDB();
@@ -212,6 +213,7 @@ app.post("/:token", async (req, res) => {
   const sendBot = (m, d) =>
     axios.post(`https://api.telegram.org/bot${token}/${m}`, d);
 
+  // ADMIN ONLY
   if (user !== config.admin) {
     await sendBot("sendMessage", {
       chat_id: chat,
@@ -233,6 +235,7 @@ app.post("/:token", async (req, res) => {
     resize_keyboard: true
   });
 
+  // START
   if (text === "/start") {
     await sendBot("sendMessage", {
       chat_id: chat,
@@ -242,109 +245,130 @@ app.post("/:token", async (req, res) => {
     return;
   }
 
+  // ADD MODE
   if (text === "➕ Add Mode") {
     config.state[user].mode = "add";
     saveDB(db);
-
     await sendBot("sendMessage", {
       chat_id: chat,
-      text: "alias - caption"
+      text: "Send: alias - caption"
     });
     return;
   }
 
-  if (config.state[user].mode === "add") {
-    if (!text.includes("-")) {
+  if (config.state[user]?.mode === "add") {
+    if (!text || !text.includes("-")) {
       await sendBot("sendMessage", {
         chat_id: chat,
-        text: "❌ Format: alias - caption"
+        text: "❌ Use: alias - caption"
       });
       return;
     }
 
     let [a, ...b] = text.split("-");
-    config.modes[a.trim().toLowerCase()] = b.join("-").trim();
+    const alias = a.trim().toLowerCase();
+    const caption = b.join("-").trim();
 
+    if (!alias || !caption) {
+      await sendBot("sendMessage", {
+        chat_id: chat,
+        text: "❌ Invalid input"
+      });
+      return;
+    }
+
+    config.modes[alias] = caption;
     delete config.state[user].mode;
     saveDB(db);
 
     await sendBot("sendMessage", {
       chat_id: chat,
-      text: "✅ Mode added",
+      text: `✅ Mode "${alias}" added`,
       reply_markup: menu()
     });
     return;
   }
 
+  // DELETE MODE
   if (text === "❌ Delete Mode") {
     config.state[user].mode = "delete";
-
     await sendBot("sendMessage", {
       chat_id: chat,
-      text: "Send mode name"
+      text: "Send mode name to delete"
     });
     return;
   }
 
-  if (config.state[user].mode === "delete") {
+  if (config.state[user]?.mode === "delete") {
+    if (!config.modes[text]) {
+      await sendBot("sendMessage", {
+        chat_id: chat,
+        text: "❌ Mode not found"
+      });
+      return;
+    }
+
     delete config.modes[text];
     delete config.state[user].mode;
     saveDB(db);
 
     await sendBot("sendMessage", {
       chat_id: chat,
-      text: "Deleted",
+      text: "❌ Mode deleted",
       reply_markup: menu()
     });
     return;
   }
 
+  // ADD CHANNEL
   if (text === "📢 Add Channel") {
     config.state[user].mode = "channel";
-
     await sendBot("sendMessage", {
       chat_id: chat,
-      text: "Send channel ID"
+      text: "Send channel ID (e.g. -100xxxxxxxxxx)"
     });
     return;
   }
 
-  if (config.state[user].mode === "channel") {
-    config.channels.push(text);
+  if (config.state[user]?.mode === "channel") {
+    if (!config.channels.includes(text)) {
+      config.channels.push(text);
+    }
     delete config.state[user].mode;
     saveDB(db);
 
     await sendBot("sendMessage", {
       chat_id: chat,
-      text: "Channel added",
+      text: "✅ Channel added",
       reply_markup: menu()
     });
     return;
   }
 
+  // SELECT MODE → START MULTI-UPLOAD
   if (config.modes[text]) {
     config.state[user] = { post: text, media: [] };
-
     await sendBot("sendMessage", {
       chat_id: chat,
-      text: "Send photos then DONE"
+      text: "📸 Send photos, then type DONE"
     });
     return;
   }
 
-  if (msg.photo && config.state[user].media) {
+  // COLLECT PHOTOS
+  if (msg.photo && config.state[user]?.media) {
     config.state[user].media.push(
       msg.photo[msg.photo.length - 1].file_id
     );
-
     await sendBot("sendMessage", {
       chat_id: chat,
-      text: "Added"
+      text: "✅ Added"
     });
     return;
   }
 
-  if (text === "DONE" && config.state[user].media) {
+  // POST
+  if (text === "DONE" && config.state[user]?.media) {
     if (config.channels.length === 0) {
       await sendBot("sendMessage", {
         chat_id: chat,
@@ -365,27 +389,29 @@ app.post("/:token", async (req, res) => {
             caption: i === 0 ? config.modes[data.post] : ""
           }))
         });
-      } catch (e) {
+      } catch {
         await sendBot("sendMessage", {
           chat_id: chat,
-          text: "❌ Failed to post"
+          text: "❌ Failed to post (check bot admin rights)"
         });
       }
     }
 
     config.stats.posts++;
-    config.logs.push(`Posted ${data.media.length}`);
+    config.logs.push(`Posted ${data.media.length} photos`);
 
     delete config.state[user];
     saveDB(db);
 
     await sendBot("sendMessage", {
       chat_id: chat,
-      text: "✅ Posted Successfully 🚀",
+      text: "🚀 Posted Successfully",
       reply_markup: menu()
     });
+    return;
   }
 
+  // STATS
   if (text === "📊 Stats") {
     await sendBot("sendMessage", {
       chat_id: chat,
@@ -393,6 +419,7 @@ app.post("/:token", async (req, res) => {
     });
   }
 
+  // LOGS
   if (text === "🧾 Logs") {
     await sendBot("sendMessage", {
       chat_id: chat,
@@ -401,14 +428,13 @@ app.post("/:token", async (req, res) => {
   }
 });
 
-// ===== HEALTH CHECK =====
+// ===== HEALTH =====
 app.get("/", (req, res) => {
   res.send("🚀 Bot Running");
 });
 
-// ===== START SERVER =====
+// ===== START =====
 app.listen(PORT, async () => {
-  console.log("🚀 Server Started");
-
+  console.log("🚀 Server started");
   await setWebhook(MAIN_TOKEN);
 });
