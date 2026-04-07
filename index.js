@@ -8,7 +8,6 @@ app.use(bodyParser.json());
 
 // ===== CONFIG =====
 const MAIN_TOKEN = "8747945915:AAHFjkl-TypMYhCmokYgVT4XIIDJFyd1eFg";
-const MAIN_API = `https://api.telegram.org/bot${MAIN_TOKEN}`;
 const BASE_URL = "https://revoltcheats.onrender.com"; // CHANGE THIS
 const DB_FILE = "data.json";
 
@@ -64,7 +63,7 @@ app.post("/", async (req, res) => {
   if (text === "/start") {
     await send(MAIN_TOKEN, "sendMessage", {
       chat_id: chat,
-      text: "🚀 Welcome to Revolt Bot Maker",
+      text: "🚀 Revolt Bot Maker",
       reply_markup: mainMenu()
     });
     return;
@@ -83,7 +82,7 @@ app.post("/", async (req, res) => {
     return;
   }
 
-  // TOKEN INPUT
+  // TOKEN
   if (db.users[chat].state === "await_token") {
     if (!text || !text.includes(":") || text.length < 30) {
       await send(MAIN_TOKEN, "sendMessage", {
@@ -116,7 +115,7 @@ app.post("/", async (req, res) => {
     return;
   }
 
-  // ADMIN ID INPUT
+  // ADMIN ID
   if (db.users[chat].state === "await_admin") {
     const token = db.tempToken[chat];
 
@@ -145,7 +144,7 @@ app.post("/", async (req, res) => {
 
     await send(MAIN_TOKEN, "sendMessage", {
       chat_id: chat,
-      text: "✅ Bot Created Successfully 🚀"
+      text: "✅ Bot Created 🚀"
     });
 
     delete db.users[chat].state;
@@ -154,29 +153,9 @@ app.post("/", async (req, res) => {
     saveDB(db);
     return;
   }
-
-  // MY BOT
-  if (text === "📊 My Bot") {
-    const token = db.bots[chat];
-
-    if (!token) {
-      await send(MAIN_TOKEN, "sendMessage", {
-        chat_id: chat,
-        text: "❌ No bot found"
-      });
-      return;
-    }
-
-    const info = await axios.get(`https://api.telegram.org/bot${token}/getMe`);
-
-    await send(MAIN_TOKEN, "sendMessage", {
-      chat_id: chat,
-      text: `🤖 Your Bot: @${info.data.result.username}`
-    });
-  }
 });
 
-// ===== CLONED BOT SYSTEM =====
+// ===== CLONED BOT =====
 app.post("/:token", async (req, res) => {
   res.sendStatus(200);
 
@@ -213,185 +192,117 @@ app.post("/:token", async (req, res) => {
   config.logs ||= [];
   config.stats ||= { posts: 0 };
 
+  // ===== MENU =====
   function mainMenu() {
-    let buttons = Object.keys(config.modes).map(m => [m]);
-    buttons.push(["➕ Add Mode"]);
-    buttons.push(["✏️ Edit Mode", "❌ Delete Mode"]);
-    buttons.push(["📢 Channels"]);
-    buttons.push(["📊 Stats", "🧾 Logs"]);
-    return { keyboard: buttons, resize_keyboard: true };
+    let btn = Object.keys(config.modes).map(m => [m]);
+    btn.push(["➕ Add Mode"]);
+    btn.push(["✏️ Edit Mode", "❌ Delete Mode"]);
+    btn.push(["📢 Channels"]);
+    btn.push(["📊 Stats", "🧾 Logs"]);
+    return { keyboard: btn, resize_keyboard: true };
   }
 
-  function channelMenu() {
-    return {
-      keyboard: [
-        ["➕ Add Channel"],
-        ["➖ Remove Channel"],
-        ["📄 List Channels"],
-        ["🔙 Back"]
-      ],
-      resize_keyboard: true
-    };
-  }
-
+  // START
   if (text === "/start") {
     await botSend("sendMessage", {
       chat_id: chat,
-      text: "⚡ Your Custom Revolt Bot",
+      text: "⚡ Your Custom Bot",
       reply_markup: mainMenu()
     });
     return;
   }
 
+  // ===== ADD MODE =====
   if (text === "➕ Add Mode") {
-    config.userStates[userId] = "add_mode";
-    await botSend("sendMessage", { chat_id: chat, text: "alias - caption" });
+    config.userStates[userId] = "await_mode";
+
+    await botSend("sendMessage", {
+      chat_id: chat,
+      text: "alias - caption"
+    });
+
+    saveDB(db);
     return;
   }
 
-  if (config.userStates[userId] === "add_mode" && text.includes("-")) {
-    let [a, c] = text.split("-", 2);
-    config.modes[a.trim()] = c.trim();
+  if (config.userStates[userId] === "await_mode") {
+    if (!text || !text.includes("-")) {
+      await botSend("sendMessage", {
+        chat_id: chat,
+        text: "❌ Use: alias - caption"
+      });
+      return;
+    }
+
+    let [alias, ...rest] = text.split("-");
+    alias = alias.trim().toLowerCase();
+    let caption = rest.join("-").trim();
+
+    if (!alias || !caption) {
+      await botSend("sendMessage", {
+        chat_id: chat,
+        text: "❌ Invalid"
+      });
+      return;
+    }
+
+    config.modes[alias] = caption;
 
     delete config.userStates[userId];
     saveDB(db);
 
     await botSend("sendMessage", {
       chat_id: chat,
-      text: "✅ Mode added",
+      text: `✅ Mode ${alias} added`,
       reply_markup: mainMenu()
     });
     return;
   }
 
-  if (text === "✏️ Edit Mode") {
-    config.userStates[userId] = "edit_select";
-    await botSend("sendMessage", { chat_id: chat, text: "Send mode name" });
-    return;
-  }
-
-  if (config.userStates[userId] === "edit_select" && config.modes[text]) {
-    config.userStates[userId] = { edit: text };
-    await botSend("sendMessage", { chat_id: chat, text: "New caption" });
-    return;
-  }
-
-  if (typeof config.userStates[userId] === "object") {
-    let m = config.userStates[userId].edit;
-    config.modes[m] = text;
-
-    delete config.userStates[userId];
-    saveDB(db);
-
-    await botSend("sendMessage", {
-      chat_id: chat,
-      text: "✅ Updated",
-      reply_markup: mainMenu()
-    });
-    return;
-  }
-
+  // ===== DELETE MODE =====
   if (text === "❌ Delete Mode") {
-    config.userStates[userId] = "delete_mode";
+    config.userStates[userId] = "delete";
     await botSend("sendMessage", { chat_id: chat, text: "Send mode name" });
     return;
   }
 
-  if (config.userStates[userId] === "delete_mode" && config.modes[text]) {
+  if (config.userStates[userId] === "delete") {
     delete config.modes[text];
     delete config.userStates[userId];
     saveDB(db);
 
     await botSend("sendMessage", {
       chat_id: chat,
-      text: "❌ Deleted",
+      text: "Deleted",
       reply_markup: mainMenu()
     });
     return;
   }
 
+  // ===== CHANNEL ADD =====
   if (text === "📢 Channels") {
-    await botSend("sendMessage", {
-      chat_id: chat,
-      text: "Channel Manager",
-      reply_markup: channelMenu()
-    });
-    return;
-  }
-
-  if (text === "🔙 Back") {
-    await botSend("sendMessage", {
-      chat_id: chat,
-      text: "Back",
-      reply_markup: mainMenu()
-    });
-    return;
-  }
-
-  if (text === "➕ Add Channel") {
-    config.userStates[userId] = "add_channel";
+    config.userStates[userId] = "channel";
     await botSend("sendMessage", { chat_id: chat, text: "Send channel ID" });
     return;
   }
 
-  if (config.userStates[userId] === "add_channel") {
+  if (config.userStates[userId] === "channel") {
     config.channels.push(text);
     delete config.userStates[userId];
     saveDB(db);
 
     await botSend("sendMessage", {
       chat_id: chat,
-      text: "✅ Added",
-      reply_markup: channelMenu()
+      text: "Added",
+      reply_markup: mainMenu()
     });
     return;
   }
 
-  if (text === "➖ Remove Channel") {
-    config.userStates[userId] = "remove_channel";
-    await botSend("sendMessage", { chat_id: chat, text: "Send ID" });
-    return;
-  }
-
-  if (config.userStates[userId] === "remove_channel") {
-    config.channels = config.channels.filter(c => c !== text);
-    delete config.userStates[userId];
-    saveDB(db);
-
-    await botSend("sendMessage", {
-      chat_id: chat,
-      text: "❌ Removed",
-      reply_markup: channelMenu()
-    });
-    return;
-  }
-
-  if (text === "📄 List Channels") {
-    await botSend("sendMessage", {
-      chat_id: chat,
-      text: config.channels.join("\n") || "No channels"
-    });
-    return;
-  }
-
-  if (text === "📊 Stats") {
-    await botSend("sendMessage", {
-      chat_id: chat,
-      text: `Posts: ${config.stats.posts}`
-    });
-    return;
-  }
-
-  if (text === "🧾 Logs") {
-    await botSend("sendMessage", {
-      chat_id: chat,
-      text: config.logs.slice(-5).join("\n") || "No logs"
-    });
-    return;
-  }
-
+  // ===== MODE SELECT =====
   if (config.modes[text]) {
-    config.userStates[userId] = { postMode: text, media: [] };
+    config.userStates[userId] = { mode: text, media: [] };
+
     await botSend("sendMessage", {
       chat_id: chat,
       text: "Send photos then DONE"
@@ -399,6 +310,7 @@ app.post("/:token", async (req, res) => {
     return;
   }
 
+  // ===== PHOTO =====
   if (msg.photo && config.userStates[userId]?.media) {
     const p = msg.photo[msg.photo.length - 1].file_id;
     config.userStates[userId].media.push(p);
@@ -410,9 +322,10 @@ app.post("/:token", async (req, res) => {
     return;
   }
 
+  // ===== DONE =====
   if (text === "DONE" && config.userStates[userId]?.media) {
-    const data = config.userStates[userId];
-    const caption = config.modes[data.postMode];
+    let data = config.userStates[userId];
+    let caption = config.modes[data.mode];
 
     for (let ch of config.channels) {
       await botSend("sendMediaGroup", {
@@ -426,31 +339,22 @@ app.post("/:token", async (req, res) => {
     }
 
     config.stats.posts++;
-    config.logs.push(`Posted ${data.media.length} photos`);
+    config.logs.push(`Posted ${data.media.length}`);
 
     delete config.userStates[userId];
     saveDB(db);
 
     await botSend("sendMessage", {
       chat_id: chat,
-      text: "✅ Posted",
+      text: "Posted",
       reply_markup: mainMenu()
     });
   }
 });
 
-// ===== DASHBOARD =====
+// ===== WEB =====
 app.get("/", (req, res) => {
-  const db = loadDB();
-
-  res.send(`
-    <h1>⚡ Revolt Bot</h1>
-    <p>Users: ${Object.keys(db.bots).length}</p>
-    <p>Bots: ${Object.keys(db.configs).length}</p>
-    <p>Status: Running 🚀</p>
-  `);
+  res.send("Bot Running 🚀");
 });
 
-// ===== START =====
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("🚀 Running"));
+app.listen(3000, () => console.log("Running 🚀"));
