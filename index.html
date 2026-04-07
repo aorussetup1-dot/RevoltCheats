@@ -1,1 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revolt Loader</title>
 
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: radial-gradient(circle at top, #1a0000, #000000);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Container */
+.card {
+  text-align: center;
+  padding: 40px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 0 30px rgba(255, 0, 0, 0.4);
+  width: 320px;
+}
+
+/* Logo */
+.logo {
+  width: 120px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+}
+
+/* Heading */
+h1 {
+  margin: 10px 0;
+  font-size: 28px;
+  letter-spacing: 1px;
+  color: #ff2e2e;
+  text-shadow: 0 0 10px #ff0000;
+}
+
+/* Subtext */
+p {
+  color: #bbb;
+  margin-bottom: 25px;
+}
+
+/* Button */
+.btn {
+  display: inline-block;
+  padding: 14px 28px;
+  font-size: 16px;
+  color: white;
+  background: linear-gradient(45deg, #ff0000, #990000);
+  border: none;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: 0.3s;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+}
+
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(255, 0, 0, 1);
+}
+
+/* Glow animation */
+@keyframes pulse {
+  0% { box-shadow: 0 0 10px red; }
+  50% { box-shadow: 0 0 25px red; }
+  100% { box-shadow: 0 0 10px red; }
+}
+
+.btn {
+  animation: pulse 2s infinite;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+  <!-- 🔥 Replace with your uploaded logo path -->
+  <img src="logo.jpg" class="logo">
+
+  <h1>REVOLT LOADER</h1>
+  <p>Download Latest Version</p>
+
+  <!-- 🔥 Replace APK link -->
+  <a class="btn" href="https://raw.githubusercontent.com/aorussetup1-dot/RevoltCheats/main/app.apk">
+    DOWNLOAD APK
+  </a>
+
+</div>
+
+</body>
+</html>
