@@ -5,100 +5,207 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Revolt Loader</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+
 <style>
-body {
+* {
   margin: 0;
-  font-family: 'Segoe UI', sans-serif;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Orbitron', sans-serif;
+}
+
+body {
+  height: 100vh;
   background: radial-gradient(circle at top, #1a0000, #000000);
-  color: white;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  overflow: hidden;
+  color: white;
 }
 
-/* Container */
+/* 🔥 Animated background glow */
+body::before {
+  content: "";
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,0,0,0.15), transparent 60%);
+  animation: moveBg 8s linear infinite;
+}
+
+@keyframes moveBg {
+  0% { transform: translate(-20%, -20%); }
+  50% { transform: translate(20%, 20%); }
+  100% { transform: translate(-20%, -20%); }
+}
+
+/* Card */
 .card {
+  position: relative;
   text-align: center;
   padding: 40px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255,255,255,0.05);
   backdrop-filter: blur(15px);
-  box-shadow: 0 0 30px rgba(255, 0, 0, 0.4);
-  width: 320px;
+  box-shadow: 0 0 40px rgba(255,0,0,0.5);
+  width: 340px;
+  z-index: 1;
+  animation: fadeIn 1.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 /* Logo */
 .logo {
   width: 120px;
   margin-bottom: 20px;
-  border-radius: 12px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 /* Heading */
 h1 {
-  margin: 10px 0;
-  font-size: 28px;
-  letter-spacing: 1px;
   color: #ff2e2e;
-  text-shadow: 0 0 10px #ff0000;
+  text-shadow: 0 0 15px red;
+  margin-bottom: 10px;
 }
 
-/* Subtext */
-p {
-  color: #bbb;
-  margin-bottom: 25px;
-}
-
-/* Button */
+/* Buttons */
 .btn {
-  display: inline-block;
-  padding: 14px 28px;
-  font-size: 16px;
-  color: white;
-  background: linear-gradient(45deg, #ff0000, #990000);
-  border: none;
+  display: block;
+  margin: 12px auto;
+  padding: 14px;
+  width: 100%;
   border-radius: 10px;
   text-decoration: none;
+  color: white;
+  font-size: 14px;
   transition: 0.3s;
-  box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
 }
 
-.btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 25px rgba(255, 0, 0, 1);
+/* Download */
+.download {
+  background: linear-gradient(45deg, #ff0000, #990000);
+  box-shadow: 0 0 20px rgba(255,0,0,0.7);
+  animation: pulseRed 2s infinite;
 }
 
-/* Glow animation */
-@keyframes pulse {
+@keyframes pulseRed {
   0% { box-shadow: 0 0 10px red; }
   50% { box-shadow: 0 0 25px red; }
   100% { box-shadow: 0 0 10px red; }
 }
 
-.btn {
-  animation: pulse 2s infinite;
+/* Telegram */
+.telegram {
+  background: linear-gradient(45deg, #0088cc, #005f99);
+  box-shadow: 0 0 15px rgba(0,136,204,0.7);
+}
+
+/* Hover */
+.btn:hover {
+  transform: scale(1.05);
+}
+
+/* Loader screen */
+.loader {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  flex-direction: column;
+}
+
+.loader h2 {
+  color: red;
+  margin-top: 20px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.3; }
+}
+
+/* Hide after load */
+.hide {
+  display: none;
+}
+
+/* Floating Telegram */
+.floating-tg {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #0088cc;
+  padding: 12px 16px;
+  border-radius: 50px;
+  color: white;
+  text-decoration: none;
+  box-shadow: 0 0 15px #0088cc;
+  font-size: 14px;
 }
 </style>
-
 </head>
 
 <body>
 
+<!-- 🔥 LOADER -->
+<div class="loader" id="loader">
+  <h2>REVOLT LOADING...</h2>
+</div>
+
+<!-- MAIN UI -->
 <div class="card">
 
-  <!-- 🔥 Replace with your uploaded logo path -->
+  <!-- Replace logo -->
   <img src="logo.jpg" class="logo">
 
   <h1>REVOLT LOADER</h1>
-  <p>Download Latest Version</p>
+  <p style="color:#aaa;">Dominate the Game</p>
 
-  <!-- 🔥 Replace APK link -->
-  <a class="btn" href="https://raw.githubusercontent.com/aorussetup1-dot/RevoltCheats/main/app.apk">
-    DOWNLOAD APK
+  <!-- Download -->
+  <a class="btn download" onclick="downloadAPK()">DOWNLOAD APK</a>
+
+  <!-- Telegram -->
+  <a class="btn telegram" href="https://t.me/ARxSHUBH" target="_blank">
+    JOIN TELEGRAM
   </a>
 
 </div>
+
+<!-- Floating Telegram -->
+<a class="floating-tg" href="https://t.me/ARxSHUBH" target="_blank">
+  TELEGRAM
+</a>
+
+<script>
+// Hide loader
+setTimeout(() => {
+  document.getElementById("loader").classList.add("hide");
+}, 2000);
+
+// Download function + auto redirect
+function downloadAPK() {
+  window.location.href = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/app.apk";
+
+  setTimeout(() => {
+    window.open("https://t.me/ARxSHUBH", "_blank");
+  }, 1500);
+}
+</script>
 
 </body>
 </html>
